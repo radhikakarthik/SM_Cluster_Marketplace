@@ -1,0 +1,204 @@
+{
+	"handler": "Microsoft.Compute.MultiVm",
+	"version": "0.1.2-preview",
+	"parameters": {
+		"basics": [
+			{
+				"name": "adminUsername",
+				"type": "Microsoft.Compute.UserNameTextBox",
+				"label": "Username",
+				"defaultValue": "azureuser",
+				"toolTip": "Admin username for the virtual machines.",
+				"osPlatform": "Linux"
+			},
+			{
+				"name": "SSHCredentials",
+				"type": "Microsoft.Compute.CredentialsCombo",
+				"label": {
+					"authenticationType": "Authentication type",
+					"password": "Password",
+					"confirmPassword": "Confirm password",
+					"sshPublicKey": "SSH public key"
+				},
+				"toolTip": {
+					"authenticationType": "",
+					"password": "",
+					"sshPublicKey": ""
+				},
+				"constraints": {
+					"required": true
+				},
+				"options": {
+					"hideConfirmation": false
+				},
+				"osPlatform": "Linux"
+			}
+		],
+		"steps": [
+			{
+				"name": "serverManagementConfig",
+				"label": "Server Management",
+				"subLabel": {
+					"preValidation": "Configure Server Management",
+					"postValidation": "Done"
+				},
+				"bladeTitle": "Server Management Settings",
+				"elements": [
+					{
+						"name": "smSystemCount",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Server Management VMs",
+						"defaultValue": 1,
+						"toolTip": "Number of Server Management VMs to deploy (1-5).  Each VM is capable of managing 70 database/application nodes.  2 is the minimum for HA configurations.",
+						"constraints": {
+							"required": true,
+							"regex": "^([1-5])$",
+							"validationMessage": "Count should be in range 1-5."
+						}
+					},
+					{
+						"name": "smSiteID",
+						"type": "Microsoft.Common.TextBox",
+						"label": "SiteID",
+						"toolTip": "A SiteID is a unique code to identify your installation of Teradata Database on Azure.  Although this site ID is not required to use Teradata Database on Azure, it is required to receive Teradata support.",
+						"constraints": {
+							"required": false,
+							"regex": "^[A-Z0-9]{0,15}$",
+							"validationMessage": "Only alphanumeric characters are allowed, and the value must be 0-15 characters long."
+						}
+					},
+					{
+						"name": "smAdminPassword",
+						"type": "Microsoft.Common.PasswordBox",
+						"label": {
+							"password": "Server Management Admin Password",
+							"confirmPassword": "Confirm Admin Password"
+						},
+						"toolTip": "Server Management Admin Password, used for SM Client UI",
+						"constraints": {
+							"required": true,
+							"regex": "(^[a-zA-Z0-9].{5,31})$",
+							"validationMessage": "Password must be between 6 and 32 characters long alpha-numeric characters."
+						},
+						"options": {
+							"hideConfirmation": false
+						}
+					},
+					{
+						"name": "smRESTPassword",
+						"type": "Microsoft.Common.PasswordBox",
+						"label": {
+							"password": "Server Management REST Password",
+							"confirmPassword": "Confirm REST Password"
+						},
+						"toolTip": "Server Management REST Password used by SM Portlet",
+						"constraints": {
+							"required": true,
+							"regex": "(^[a-zA-Z0-9].{5,31})$",
+							"validationMessage": "Password must be between 6 and 32 characters long alpha-numeric characters."
+						},
+						"options": {
+							"hideConfirmation": false
+						}
+					}
+				]
+			},
+			{
+				"name": "generalConfig",
+				"label": "Network Settings",
+				"subLabel": {
+					"preValidation": "Configure Settings",
+					"postValidation": "Done"
+				},
+				"bladeTitle": "Network Settings",
+				"elements": [
+					{
+						"name": "virtualNetworkSection",
+						"type": "Microsoft.Common.Section",
+						"label": "Virtual Network Configuration",
+						"elements": [
+							{
+								"name": "virtualNetwork",
+								"type": "Microsoft.Network.VirtualNetworkCombo",
+								"label": {
+									"virtualNetwork": "Existing Virtual Network",
+									"subnets": "Subnet"
+								},
+								"toolTip": {
+									"virtualNetwork": "Server Management VMs are expected to be deployed onto an existing vritual network with Teradata database/application VMs",
+									"subnets": "Server Management VMs are expected to be deployed onto an existing subnet with Teradata/application VMs."
+								},
+								"defaultValue": {
+									"name": "vnet-sm",
+									"addressPrefixSize": "/16"
+								},
+								"options": {
+									"hideExisting": false
+								},
+								"constraints": {
+									"minAddressPrefixSize": "/24"
+								},
+								"subnets": {
+									"vmsubnet": {
+										"label": "VMSubnet",
+										"defaultValue": {
+											"name": "vmsubnet",
+											"addressPrefixSize": "/24"
+										},
+										"constraints": {
+											"minAddressPrefixSize": "/26",
+											"minAddressCount": "[steps('serverManagementConfig').smSystemCount]",
+											"requireContiguousAddresses": true
+										}
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "existingNSGName",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Existing NSG Name",
+						"toolTip": "The name of the existing network security group",
+						"constraints": {
+							"required": true,
+							"regex": "^[a-zA-Z0-9_.-]*$",
+							"validationMessage": "NSG name can contain letters, numbers, underscores, periods and hyphens, must start with a letter or number and must end with a letter, number, or underscore."
+						}
+					},
+					{
+						"name": "existingNSGResourceGroup",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Existing NSG Resource Group",
+						"toolTip": "The name of resource group of existing network security group",
+						"constraints": {
+							"required": true,
+							"regex": "^[a-zA-Z0-9_.-]*$",
+							"validationMessage": "NSG resource group name can contain letters, numbers, underscores, periods and hyphens, must start with a letter or number and must end with a letter, number, or underscore."
+						}
+					}
+				]
+			}
+		],
+		"outputs": {
+			"location": "[location()]",
+			"adminUsername": "[basics('adminUsername')]",
+			"authenticationType": "[basics('SSHCredentials').authenticationType]",
+			"adminPassword": "[basics('SSHCredentials').password]",
+			"sshPublicKey": "[basics('SSHCredentials').sshPublicKey]",
+			"vnetResourceGroup": "[steps('generalConfig').virtualNetworkSection.virtualNetwork.resourceGroup]",
+			"vnetName": "[steps('generalConfig').virtualNetworkSection.virtualNetwork.name]",
+			"vnetNewOrExisting": "[steps('generalConfig').virtualNetworkSection.virtualNetwork.newOrExisting]",
+			"vnetAddressSpace": "[steps('generalConfig').virtualNetworkSection.virtualNetwork.addressPrefix]",
+			"vmSubnetName": "[steps('generalConfig').virtualNetworkSection.virtualNetwork.subnets.vmsubnet.name]",
+			"vmSubnetAddressSpace": "[steps('generalConfig').virtualNetworkSection.virtualNetwork.subnets.vmsubnet.addressPrefix]",
+			"vmSubnetStartAddress": "[steps('generalConfig').virtualNetworkSection.virtualNetwork.subnets.vmsubnet.startAddress]",
+			"existingNSGName": "[steps('generalConfig').existingNSGName]",
+			"nsgResourceGroup": "[steps('generalConfig').existingNSGResourceGroup]",
+			"smSystemCount": "[int(steps('serverManagementConfig').smSystemCount)]",
+			"smSiteID": "[steps('serverManagementConfig').smSiteID]",
+			"smAdminPassword": "[steps('serverManagementConfig').smAdminPassword]",
+			"smRESTPassword": "[steps('serverManagementConfig').smRESTPassword]"
+		}
+	}
+}

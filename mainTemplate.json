@@ -1,0 +1,323 @@
+	{
+		"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+		"contentVersion": "1.0.0.0",
+		"parameters": {
+			"artifactsBaseUrl": {
+				"type": "string",
+				"defaultValue": "https://raw.githubusercontent.com/CJLove/SM_Cluster/master",
+				"metadata": {
+					"description": "Base URL of the solution template gallery package not including the trailing slash",
+					"artifactsBaseUrl": ""
+				}
+			},
+			"location": {
+				"type": "string",
+				"metadata": {
+					"description": "Location were resources will be deployed"
+				}
+			},
+			"adminUsername": {
+				"type": "string",
+				"metadata": {
+					"description": "Username for administrator of virtual machines and SSH"
+				}
+			},
+			"authenticationType": {
+				"type": "string",
+				"allowedValues": [
+					"password",
+					"sshPublicKey"
+				],
+				"metadata": {
+					"description": "Authentication type for the virtual machines"
+				}
+			},
+			"adminPassword": {
+				"type": "securestring",
+				"defaultValue": "",
+				"metadata": {
+					"description": "Admin password for the virtual machines and SSH. Keep empty if providing SSH Public Key authentication type."
+				}
+			},
+			"sshPublicKey": {
+				"type": "string",
+				"defaultValue": "",
+				"metadata": {
+					"description": "SSH public key that will be included on all nodes in the cluster. The OpenSSH public key can be generated with tools like ssh-keygen on Linux or OS X."
+				}
+			},
+			"vnetResourceGroup": {
+				"type": "string",
+				"metadata": {
+					"description": "Virtual Network Resource Group for cases when cluster nodes are deployed into an existing VNet"
+				}
+			},
+			"vnetName": {
+				"type": "string",
+				"metadata": {
+					"description": "Virtual Network name"
+				}
+			},
+			"vnetNewOrExisting": {
+				"type": "string",
+				"allowedValues": [
+					"new",
+					"existing"
+				],
+				"metadata": {
+					"description": "Parameter that specifies if an new or an existing virtual network should be used for deploying cluster nodes"
+				}
+			},
+			"vnetAddressSpace": {
+				"type": "string",
+				"defaultValue": "10.1.0.0/16",
+				"metadata": {
+					"description": "Virtual Network Address Prefix (i.e. CIDR)"
+				}
+			},
+			"vmSubnetName": {
+				"type": "string",
+				"metadata": {
+					"description": "VM Subnet"
+				}
+			},
+			"vmSubnetAddressSpace": {
+				"type": "string",
+				"metadata": {
+					"description": "VM Subnet Address Space"
+				}
+			},
+			"vmSubnetStartAddress": {
+				"type": "string",
+				"metadata": {
+					"description": "VMSubnet Start Address"
+				}
+			},
+			"existingNSGName": {
+				"type": "string",
+				"metadata": {
+					"description": "Existing NSG name"
+				}
+			},
+			"nsgResourceGroup": {
+				"type": "string",
+				"metadata": {
+					"description": "Existing NSG resource group name"
+				}
+			},
+			"smSystemCount": {
+				"type": "int",
+				"defaultValue": 1,
+				"metadata": {
+					"description": "Number of SM VMs"
+				}
+			},
+			"smPassword": {
+				"type": "securestring",
+				"defaultValue": "",
+				"metadata": {
+					"description": "Password for administrator SM"
+				}
+			},
+			"smSshPublicKey": {
+				"type": "string",
+				"defaultValue": "",
+				"metadata": {
+					"description": "SSH public key for SM"
+				}
+			},
+			"smAuthenticationType": {
+				"type": "string",
+				"defaultValue": "password",
+				"metadata": {
+					"description": "Authentication type for the SM virtual machines"
+				}
+			},
+			"smSiteID": {
+				"type": "string",
+				"defaultValue": "",
+				"metadata": {
+					"description": "Site ID"
+				}
+			},
+			"smAdminPassword": {
+				"type": "securestring",
+				"metadata": {
+					"description": "Server Management Admin password"
+				}
+			},
+			"smRESTPassword": {
+				"type": "securestring",
+				"metadata": {
+					"description": "Server Management REST password"
+				}
+			},
+			"teradataTags": {
+				"type": "object",
+				"defaultValue": {
+					"provider": "1C8BE09A-CE46-4BF1-A01B-F570FE1EA1B3"
+				}
+			}
+		},
+		"variables": {
+			"apiVersions": {
+				"resources": {
+					"deployments": "2016-09-01"
+				},
+				"storage": {
+					"storageAccounts": "2016-05-01"
+				},
+				"network": {
+					"virtualNetworks": "2016-03-30",
+					"networkInterfaces": "2016-03-30",
+					"loadBalancers": "2016-03-30",
+					"publicIPAddresses": "2016-03-30",
+					"networkSecurityGroups": "2016-03-30"
+				},
+				"compute": {
+					"availabilitySets": "2016-03-30",
+					"virtualMachines": "2016-03-30",
+					"virtualMachineExtensions": "2016-03-30"
+				}
+			},
+			"baseUrl": "[concat(parameters('artifactsBaseUrl'),'/')]",
+			"templateUrlVnet": "[concat(variables('baseUrl'),'vnet-',parameters('vnetNewOrExisting'),'.json')]",
+			"templateUrlServerManagement": "[concat(variables('baseUrl'),'serverManagement.json')]",
+			"vnetID": "[resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+			"subnet1ID": "[concat(variables('vnetID'),'/subnets/',parameters('vmSubnetName'))]",
+			"imagePublisherSM": "teradata",
+			"imageOfferSM": "sm-1204-preview",
+			"imageSkuSM": "server-management-1204-1",
+			"smVMSize": "Standard_DS3_V2",
+			"smImageStorageAccountType": "Premium_LRS",
+			"smSystemPrefix": "sm",
+			"s1": "[split(parameters('vmSubnetStartAddress'),'.')]",
+			"serverManagementAddressCount": "[parameters('smSystemCount')]",
+			"smSubnetStartAddress": "[concat(variables('s1')[0], '.', variables('s1')[1], '.', add(int(variables('s1')[2]), div(add(int(variables('s1')[3]),variables('serverManagementAddressCount')),256)), '.', mod(add(int(variables('s1')[3]),variables('serverManagementAddressCount')),256))]",
+			"vnet": "[concat('vnet',uniqueString(resourceGroup().id))]",
+			"publicIP": "[concat('publicIP',uniqueString(resourceGroup().id))]",
+			"serverManagement": "[concat('serverManagement',uniqueString(resourceGroup().id))]"
+		},
+		"resources": [
+			{
+				"apiVersion": "[variables('apiVersions').resources.deployments]",
+				"type": "Microsoft.Resources/deployments",
+				"name": "[variables('vnet')]",
+				"dependsOn": [],
+				"properties": {
+					"mode": "Incremental",
+					"templateLink": {
+						"uri": "[variables('templateUrlVnet')]",
+						"contentVersion": "1.0.0.0"
+					},
+					"parameters": {
+						"apiVersions": {
+							"value": "[variables('apiVersions')]"
+						},
+						"location": {
+							"value": "[parameters('location')]"
+						},
+						"vnetName": {
+							"value": "[parameters('vnetName')]"
+						},
+						"vnetResourceGroup": {
+							"value": "[parameters('vnetResourceGroup')]"
+						},
+						"vnetAddressSpace": {
+							"value": "[parameters('vnetAddressSpace')]"
+						},
+						"vmSubnetName": {
+							"value": "[parameters('vmSubnetName')]"
+						},
+						"vmSubnetAddressSpace": {
+							"value": "[parameters('vmSubnetAddressSpace')]"
+						},
+						"existingNSGName": {
+							"value": "[parameters('existingNSGName')]"
+						},
+						"nsgResourceGroup": {
+							"value": "[parameters('nsgResourceGroup')]"
+						},
+						"teradataTags": {
+							"value": "[parameters('teradataTags')]"
+						}
+					}
+				}
+			},
+			{
+				"apiVersion": "[variables('apiVersions').resources.deployments]",
+				"type": "Microsoft.Resources/deployments",
+				"name": "[variables('serverManagement')]",
+				"dependsOn": [
+					"[variables('vnet')]"
+				],
+				"properties": {
+					"mode": "Incremental",
+					"templateLink": {
+						"uri": "[variables('templateUrlServerManagement')]",
+						"contentVersion": "1.0.0.0"
+					},
+					"parameters": {
+						"apiVersions": {
+							"value": "[variables('apiVersions')]"
+						},
+						"location": {
+							"value": "[parameters('location')]"
+						},
+						"adminUsername": {
+							"value": "[parameters('adminUsername')]"
+						},
+						"smSiteID": {
+							"value": "[parameters('smSiteID')]"
+						},
+						"smPassword": {
+							"value": "[parameters('adminPassword')]"
+						},
+						"smSshPublicKey": {
+							"value": "[parameters('smSshPublicKey')]"
+						},
+						"smAuthenticationType": {
+							"value": "[parameters('authenticationType')]"
+						},
+						"smAdminPassword": {
+							"value": "[parameters('smAdminPassword')]"
+						},
+						"smRESTPassword": {
+							"value": "[parameters('smRESTPassword')]"
+						},
+						"smSystemCount": {
+							"value": "[parameters('smSystemCount')]"
+						},
+						"smSystemPrefix": {
+							"value": "[variables('smSystemPrefix')]"
+						},
+						"smVMSize": {
+							"value": "[variables('smVMSize')]"
+						},
+						"subnet1SMID": {
+							"value": "[variables('subnet1ID')]"
+						},
+						"smSubnetStartAddress": {
+							"value": "[variables('smSubnetStartAddress')]"
+						},
+						"imagePublisher": {
+							"value": "[variables('imagePublisherSM')]"
+						},
+						"imageOffer": {
+							"value": "[variables('imageOfferSM')]"
+						},
+						"imageSku": {
+							"value": "[variables('imageSkuSM')]"
+						},
+						"imageStorageAccountType": {
+							"value": "[variables('smImageStorageAccountType')]"
+						},
+						"teradataTags": {
+							"value": "[parameters('teradataTags')]"
+						}
+					}
+				}
+			}
+		],
+		"outputs": {}
+	}
