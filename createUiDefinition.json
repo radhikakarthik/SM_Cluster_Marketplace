@@ -154,28 +154,6 @@
 								}
 							}
 						]
-					},
-					{
-						"name": "existingNSGName",
-						"type": "Microsoft.Common.TextBox",
-						"label": "Existing NSG Name",
-						"toolTip": "The name of the existing network security group",
-						"constraints": {
-							"required": true,
-							"regex": "^[a-zA-Z0-9_.-]*$",
-							"validationMessage": "NSG name can contain letters, numbers, underscores, periods and hyphens, must start with a letter or number and must end with a letter, number, or underscore."
-						}
-					},
-					{
-						"name": "existingNSGResourceGroup",
-						"type": "Microsoft.Common.TextBox",
-						"label": "Existing NSG Resource Group",
-						"toolTip": "The name of resource group of existing network security group",
-						"constraints": {
-							"required": true,
-							"regex": "^[a-zA-Z0-9_.-]*$",
-							"validationMessage": "NSG resource group name can contain letters, numbers, underscores, periods and hyphens, must start with a letter or number and must end with a letter, number, or underscore."
-						}
 					}
 				]
 			}
@@ -193,8 +171,6 @@
 			"vmSubnetName": "[steps('generalConfig').virtualNetworkSection.virtualNetwork.subnets.vmsubnet.name]",
 			"vmSubnetAddressSpace": "[steps('generalConfig').virtualNetworkSection.virtualNetwork.subnets.vmsubnet.addressPrefix]",
 			"vmSubnetStartAddress": "[steps('generalConfig').virtualNetworkSection.virtualNetwork.subnets.vmsubnet.startAddress]",
-			"existingNSGName": "[steps('generalConfig').existingNSGName]",
-			"nsgResourceGroup": "[steps('generalConfig').existingNSGResourceGroup]",
 			"smSystemCount": "[int(steps('serverManagementConfig').smSystemCount)]",
 			"smSiteID": "[steps('serverManagementConfig').smSiteID]",
 			"smAdminPassword": "[steps('serverManagementConfig').smAdminPassword]",

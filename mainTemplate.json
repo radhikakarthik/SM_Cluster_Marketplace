@@ -93,18 +93,6 @@
 					"description": "VMSubnet Start Address"
 				}
 			},
-			"existingNSGName": {
-				"type": "string",
-				"metadata": {
-					"description": "Existing NSG name"
-				}
-			},
-			"nsgResourceGroup": {
-				"type": "string",
-				"metadata": {
-					"description": "Existing NSG resource group name"
-				}
-			},
 			"smSystemCount": {
 				"type": "int",
 				"defaultValue": 1,
@@ -231,12 +219,6 @@
 						},
 						"vmSubnetAddressSpace": {
 							"value": "[parameters('vmSubnetAddressSpace')]"
-						},
-						"existingNSGName": {
-							"value": "[parameters('existingNSGName')]"
-						},
-						"nsgResourceGroup": {
-							"value": "[parameters('nsgResourceGroup')]"
 						},
 						"teradataTags": {
 							"value": "[parameters('teradataTags')]"
