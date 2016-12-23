@@ -1,4 +1,4 @@
 #!/bin/bash
 
-rm -f ../SM_Cluster.zip
-zip ../SM_Cluster.zip *.json
+rm -f ../SM_Cluster_Marketplace.zip
+zip ../SM_Cluster_Marketplace.zip *.json

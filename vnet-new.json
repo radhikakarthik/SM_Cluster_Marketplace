@@ -65,7 +65,6 @@
     }
   },
   "variables": {
-    "subnetNsgName": "[parameters('existingNSGName')]",
     "vnetID": "[resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
   },
   "resources": [
