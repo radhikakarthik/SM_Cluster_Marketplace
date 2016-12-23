@@ -154,6 +154,18 @@
 								}
 							}
 						]
+					},
+					{
+						"name": "remoteAccess",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Allow Remote SSH Access From (CIDR Block)",
+						"toolTip": "Specify the address range of source addresses",
+						"defaultValue": "0.0.0.0/0",
+						"constraints": {
+							"required": true,
+							"regex": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+							"validationMessage": "Must be a valid IP CIDR range of the form x.x.x.x/x."
+						}
 					}
 				]
 			}
@@ -171,6 +183,7 @@
 			"vmSubnetName": "[steps('generalConfig').virtualNetworkSection.virtualNetwork.subnets.vmsubnet.name]",
 			"vmSubnetAddressSpace": "[steps('generalConfig').virtualNetworkSection.virtualNetwork.subnets.vmsubnet.addressPrefix]",
 			"vmSubnetStartAddress": "[steps('generalConfig').virtualNetworkSection.virtualNetwork.subnets.vmsubnet.startAddress]",
+			"sourceAddressSpace": "[steps('generalConfig').remoteAccess]",
 			"smSystemCount": "[int(steps('serverManagementConfig').smSystemCount)]",
 			"smSiteID": "[steps('serverManagementConfig').smSiteID]",
 			"smAdminPassword": "[steps('serverManagementConfig').smAdminPassword]",
