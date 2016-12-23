@@ -4,7 +4,7 @@
 		"parameters": {
 			"artifactsBaseUrl": {
 				"type": "string",
-				"defaultValue": "https://raw.githubusercontent.com/CJLove/SM_Cluster/master",
+				"defaultValue": "https://raw.githubusercontent.com/CJLove/SM_Cluster_Marketplace/master",
 				"metadata": {
 					"description": "Base URL of the solution template gallery package not including the trailing slash",
 					"artifactsBaseUrl": ""
