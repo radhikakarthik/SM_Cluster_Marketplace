@@ -84,7 +84,19 @@
     "smSubnetStartAddress": {
       "type": "string",
       "metadata": {
-        "description": "Viewpoint subnet start address"
+        "description": "Server Management subnet start address"
+      }
+    },
+    "vmSubnetAddressSpace": {
+      "type": "string",
+      "metadata": {
+        "description": "Address space of the VM subnet"
+      }
+    },
+    "sourceAddressSpace": {
+      "type": "string",
+      "metadata": {
+        "description": "CIDR block defining acceptable address range for remote SSH access"
       }
     },
     "imagePublisher": {
@@ -182,7 +194,8 @@
     "publicIPAddressDomainNameLabel": "[concat(parameters('smSystemPrefix'),'-',uniqueString(resourceGroup().id))]",
     "diagnosticsStorageAccount": "[concat('smdig',uniqueString(resourceGroup().id,'d'))]",
     "publicIPAddressType": "Static",
-    "s1": "[split(parameters('smSubnetStartAddress'),'.')]"
+    "s1": "[split(parameters('smSubnetStartAddress'),'.')]",
+    "nsgName": "sm-nsg"
   },
   "resources": [
     {
@@ -231,6 +244,243 @@
       "properties": {}
     },
     {
+      "apiVersion": "[parameters('apiVersions').network.networkSecurityGroups]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('nsgname')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "provider": "[toUpper(parameters('teradataTags').provider)]"
+      },
+      "properties": {
+        "securityRules": [
+          {
+            "name": "Allow_Remote_SSH",
+            "properties": {
+              "description": "Allow Remote SSH",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "[parameters('sourceAddressSpace')]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Allow_Local_SSH",
+            "properties": {
+              "description": "Allow Local SSH",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "[parameters('vmSubnetAddressSpace')]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 101,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Allow_REST_HTTP",
+            "properties": {
+              "description": "Allow REST http Service",
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1080",
+              "sourceAddressPrefix": "[parameters('vmSubnetAddressSpace')]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 102,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Allow_REST_HTTPS",
+            "properties": {
+              "description": "Allow REST https Service",
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1443",
+              "sourceAddressPrefix": "[parameters('vmSubnetAddressSpace')]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 103,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Allow_CMIC_UDP_HB",
+            "properties": {
+              "description": "Allow CMIC UDP HB",
+              "protocol": "UDP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "5598-5599",
+              "sourceAddressPrefix": "[parameters('vmSubnetAddressSpace')]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 104,
+              "direction": "Inbound"
+            }
+          },          
+          {
+            "name": "Allow_CMIC_TCP_HB",
+            "properties": {
+              "description": "Allow CMIC TCP HB",
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "5599",
+              "sourceAddressPrefix": "[parameters('vmSubnetAddressSpace')]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Allow_CIM",
+            "properties": {
+              "description": "Allow CIM",
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "5988",
+              "sourceAddressPrefix": "[parameters('vmSubnetAddressSpace')]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 106,
+              "direction": "Inbound"
+            }
+          },                 
+          {
+            "name": "Allow_FTU",
+            "properties": {
+              "description": "Allow FTU",
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "5999",
+              "sourceAddressPrefix": "[parameters('vmSubnetAddressSpace')]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 107,
+              "direction": "Inbound"
+            }
+          },       
+          {
+            "name": "Allow_JAVA_proxy",
+            "properties": {
+              "description": "Allow JAVA proxy Service",
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "7755",
+              "sourceAddressPrefix": "[parameters('vmSubnetAddressSpace')]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 108,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Allow_JAVA_RMI",
+            "properties": {
+              "description": "Allow JAVA RMI",
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "7757-7758",
+              "sourceAddressPrefix": "[parameters('vmSubnetAddressSpace')]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 109,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Allow_SOV_Ping",
+            "properties": {
+              "description": "Allow SOV UDP Ping ",
+              "protocol": "UDP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "7759",
+              "sourceAddressPrefix": "[parameters('vmSubnetAddressSpace')]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Allow_SERF_UDP_GOSSIP",
+            "properties": {
+              "description": "Allow SERF UDP gossip",
+              "protocol": "UDP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "7946",
+              "sourceAddressPrefix": "[parameters('vmSubnetAddressSpace')]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 111,
+              "direction": "Inbound"
+            }
+          },    
+          {
+            "name": "Allow_SERF_TCP_GOSSIP",
+            "properties": {
+              "description": "Allow SERF TCP gossip",
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "7946",
+              "sourceAddressPrefix": "[parameters('vmSubnetAddressSpace')]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 112,
+              "direction": "Inbound"
+            }
+          },  
+          {
+            "name": "Allow_CMIC_Web",
+            "properties": {
+              "description": "Allow CMIC Web Service",
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "9981",
+              "sourceAddressPrefix": "[parameters('vmSubnetAddressSpace')]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 113,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Allow_JMS",
+            "properties": {
+              "description": "Allow JMS Service",
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "61618",
+              "sourceAddressPrefix": "[parameters('vmSubnetAddressSpace')]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 114,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Allow_NTP",
+            "properties": {
+              "description": "Allow NTP Service",
+              "protocol": "UDP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "123",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 115,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },    
+    {
       "apiVersion": "[parameters('apiVersions').network.publicIPAddresses]",
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[concat(variables('publicIPAddressName'),copyIndex())]",
@@ -250,13 +500,15 @@
         "idleTimeoutInMinutes": 30
       }
     },
+
     {
       "apiVersion": "[parameters('apiVersions').network.networkInterfaces]",
       "type": "Microsoft.Network/networkInterfaces",
       "name": "[concat(variables('nic1'),copyIndex())]",
       "location": "[parameters('location')]",
       "dependsOn": [
-        "publicIPCopy"
+        "publicIPCopy",
+        "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgName'))]"
       ],
       "copy": {
         "name": "nics1Copy",

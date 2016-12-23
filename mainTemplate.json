@@ -93,6 +93,12 @@
 					"description": "VMSubnet Start Address"
 				}
 			},
+			"sourceAddressSpace": {
+				"type": "string",
+				"metadata": {
+					"description": "CIDR block defining acceptable address range for remote SSH access"
+				}
+			},
 			"smSystemCount": {
 				"type": "int",
 				"defaultValue": 1,
@@ -281,6 +287,12 @@
 						},
 						"smSubnetStartAddress": {
 							"value": "[variables('smSubnetStartAddress')]"
+						},
+						"vmSubnetAddressSpace": {
+							"value": "[parameters('vmSubnetAddressSpace')]"
+						},
+						"sourceAddressSpace": {
+							"value": "[parameters('sourceAddressSpace')]"
 						},
 						"imagePublisher": {
 							"value": "[variables('imagePublisherSM')]"
