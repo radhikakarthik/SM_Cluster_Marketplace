@@ -45,12 +45,6 @@
         "description": "VM Subnet Address Space"
       }
     },
-    "existingNSGName": {
-      "type": "string",
-      "metadata": {
-        "description": "Network Security Group Name"
-      }
-    },
     "nsgResourceGroup": {
       "type": "string",
       "metadata": {
@@ -87,10 +81,7 @@
           {
             "name": "[parameters('vmSubnetName')]",
             "properties": {
-              "addressPrefix": "[parameters('vmSubnetAddressSpace')]",
-              "networkSecurityGroup": {
-                "id": "[resourceId(parameters('NSGResourceGroup'),'Microsoft.Network/networkSecurityGroups', parameters('existingNSGName'))]"
-              }
+              "addressPrefix": "[parameters('vmSubnetAddressSpace')]"
             }
           }
         ]

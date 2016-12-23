@@ -45,12 +45,6 @@
         "description": "VM Subnet Address Space"
       }
     },
-    "existingNSGName": {
-      "type": "string",
-      "metadata": {
-        "description": "Network Security Group Name"
-      }
-    },
     "nsgResourceGroup": {
       "type": "string",
       "metadata": {
